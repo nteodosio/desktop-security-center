@@ -14,16 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      #- name: Go code sanity check
-      #  uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
-      #  with:
-      #    golangci-lint-configfile: ".golangci.yaml"
-      #    working-directory: "./packages/desktop_security_center_grpc"
       - name: Build Go stuff
         run: |
           set -eu
           cd packages/desktop_security_center_grpc
           go build .
+      - name: Go code sanity check
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
+        with:
+          golangci-lint-configfile: ".golangci.yaml"
+          working-directory: "./packages/desktop_security_center_grpc"
 
   go-tests:
     name: "Go: Tests"
