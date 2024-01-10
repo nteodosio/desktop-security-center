@@ -22,6 +22,7 @@ jobs:
       - name: Build Go stuff
         run: |
           set -eu
+          cd packages/desktop_security_center_grpc
           go build .
 
   go-tests:
