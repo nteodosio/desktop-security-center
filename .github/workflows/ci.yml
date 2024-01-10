@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  go-sanity:
+    name: "Go: Code sanity"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Go code sanity check
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
+        with:
+          golangci-lint-configfile: ".golangci.yaml"
+          working-directory: "./packages/desktop_security_center_grpc"
+      - name: Build Go stuff
+        run: |
+          set -eu
+          go build .
+
+  go-tests:
+    name: "Go: Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "./packages/desktop_security_center_grpc/go.mod"
+
+      - name: Run tests
+        run: |
+          set -eu
+
+          #cd provd
+          #go test -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=set ./... -shuffle=on
+      - name: Run tests (with race detector)
+        run: |
+          go test -race ./packages/desktop_security_center_grpc/...
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v3
+      #  with:
+      #    file: /tmp/coverage.out
+      #    flags: provd
+      #    token: ${{secrets.CODECOV_TOKEN}}
