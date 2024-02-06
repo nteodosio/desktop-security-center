@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Go code sanity check
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
+        with:
+          golangci-lint-configfile: ".golangci.yaml"
+          working-directory: "./packages/backend"
       - name: Build Go
         run: |
           set -exu
