@@ -9,12 +9,16 @@ on:
       - main
 
 jobs:
-  go-sanity:
+  build-sanity:
     name: "Build Go"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build Go
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
+        with:
+          golangci-lint-configfile: ".golangci.yaml"
+          working-directory: "./packages/backend"
         run: |
           set -exu
           sudo apt update
