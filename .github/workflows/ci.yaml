@@ -18,7 +18,7 @@ jobs:
         uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
         with:
           golangci-lint-configfile: ".golangci.yaml"
-          working-directory: "./packages/backend"
+          working-directory: "./packages"
       - name: Build Go
         run: |
           set -exu
