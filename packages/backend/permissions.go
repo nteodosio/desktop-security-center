@@ -10,6 +10,7 @@ import (
     "log"
     "net/http"
     "fmt"
+    "encoding/json"
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"
 )
@@ -164,11 +165,17 @@ func (s *PermissionServer) AreCustomRulesApplied(ctx context.Context, _ *epb.Emp
     if err != nil {
         return nil, err
     }
-    err = validateApiResponse(o)
-    if err != nil {
+    //err = validateApiResponse(o)
+    //if err != nil {
+    //    return nil, err
+    //}
+    var res snapdAPIResponse 
+    if err = json.Unmarshal([]byte(o), &res); err != nil {
         return nil, err
     }
-    return wpb.Bool(gjson.Get(o, "result.#").Uint() > 0), nil
+    fmt.Println(res.Result)
+    return wpb.Bool(true), nil
+    //return wpb.Bool(gjson.Get(o, "result.#").Uint() > 0), nil
 }
 
 /* Remove access to the path for a given application */
