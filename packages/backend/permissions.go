@@ -66,9 +66,9 @@ func makeRestReq(client HttpClient, kind string, headers map[string]string, wher
     return resBody, nil
 }
 
-func badStatusCode(res snapdAPIResponse) error {
-    if res.StatusCode < 200 || res.StatusCode >= 300 {
-        return status.Errorf(codes.Unknown, "API response %s gave code %d.", res, res.StatusCode)
+func badStatusCode(sc int) error {
+    if sc < 200 || sc >= 300 {
+        return status.Errorf(codes.Unknown, "API response gave code %d.", sc)
     }
     return nil
 }
@@ -88,7 +88,7 @@ func getSnapPathIdMaps(client HttpClient) (map[string][]string, error) {
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
-    if err = badStatusCode(res); err != nil {
+    if err = badStatusCode(res.StatusCode); err != nil {
         return nil, err 
     }
     pathSnaps := make(map[string][]string)
@@ -99,18 +99,6 @@ func getSnapPathIdMaps(client HttpClient) (map[string][]string, error) {
             snapPathId[v.Snap + sep + path] = v.Id
         }
     }
-    /*
-    snapAr := gjson.Get(o, "result.#(interface=\"home\")#.snap").Array()
-    pathAr := gjson.Get(o, "result.#(interface=\"home\")#.constraints.path-pattern").Array()
-    idAr := gjson.Get(o, "result.#(interface=\"home\")#.id").Array()
-    for idx, path := range pathAr {
-        snap := snapAr[idx].String()
-        path := path.String()
-        id := idAr[idx].String()
-        pathSnaps[path] = append(pathSnaps[path], snap)
-        snapPathId[snap + sep + path] = id
-    }
-    */
     return pathSnaps, nil
 }
 
@@ -131,8 +119,14 @@ func enableAppPermissions(client HttpClient, enable bool) error {
     if err != nil {
         return err
     }
-    //return validateApiResponse(o)
-    fmt.Println(o);return nil
+    var res confAPIResponse 
+    if err = json.Unmarshal(o, &res); err != nil {
+        return err
+    }
+    if err = badStatusCode(res.StatusCode); err != nil {
+        return err 
+    }
+    return nil
 }
 
 /* This returns 'snap get system experimental.apparmor-prompting' */
@@ -141,13 +135,15 @@ func (s *PermissionServer) IsAppPermissionsEnabled(ctx context.Context, _ *epb.E
     if err != nil {
         return nil, err
     }
-    //err = validateApiResponse(o)
-    //if err != nil {
-    //    return nil, err
-    //}
-    //enabled := gjson.Get(o, "result.experimental.apparmor-prompting").Bool()
-    //return wpb.Bool(enabled), nil
-    fmt.Println(o); return wpb.Bool(true), nil
+    var res confAPIResponse 
+    if err = json.Unmarshal(o, &res); err != nil {
+        return nil, err
+    }
+    if err = badStatusCode(res.StatusCode); err != nil {
+        return nil, err
+    }
+    enabled := res.Result.Experimental.ApparmorPrompting
+    return wpb.Bool(enabled), nil
 }
 
 /* This does the equivalent of
@@ -178,7 +174,7 @@ func (s *PermissionServer) AreCustomRulesApplied(ctx context.Context, _ *epb.Emp
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
-    if err = badStatusCode(res); err != nil {
+    if err = badStatusCode(res.StatusCode); err != nil {
         return nil, err 
     }
     fmt.Println(res.Result)
@@ -211,7 +207,7 @@ func (s *PermissionServer) RemoveAppPermission(ctx context.Context, req *pb.Remo
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
-    if err = badStatusCode(res); err != nil {
+    if err = badStatusCode(res.StatusCode); err != nil {
         return nil, err 
     }
     return empty, nil

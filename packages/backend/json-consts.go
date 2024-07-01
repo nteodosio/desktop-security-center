@@ -1,6 +1,23 @@
 package main
 
+type commonAPIfields struct {
+	Type       string `json:"type"`
+	Status     string `json:"status"`
+    Change     string `json:"change,omitempty"`
+	StatusCode int    `json:"status-code"`
+}
+
+type confAPIResponse struct {
+    Result struct {
+        Experimental struct {
+          ApparmorPrompting bool `json:"apparmor-prompting"`
+        } `json:"experimental,omitempty"`
+    } `json:"result,omitempty"`
+	*commonAPIfields
+}
+
 type snapdAPIResponse struct {
+	*commonAPIfields
     Result []struct {
         Id string `json:"id"`
         Timestamp string `json:"timestamp"`
@@ -25,11 +42,6 @@ type snapdAPIResponse struct {
 			ContractToken *string `json:"contract_token,omitempty"`
 		} `json:"experimental"`
         */
-    /* Common */
-	Type       string `json:"type"`
-	Status     string `json:"status"`
-    Change     string `json:"change,omitempty"`
-	StatusCode int    `json:"status-code"`
 }
 
 const (
