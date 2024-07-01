@@ -63,16 +63,11 @@ func makeRestReq(client HttpClient, kind string, headers map[string]string, wher
         log.Printf("Couldn't read response from %s request to %s.", kind, where)
         return "", err
     }
-    return string(resBody), nil
+    return resBody, nil
 }
 
-func validateApiResponse(res string) error {
-    if !gjson.Valid(res) {
-        log.Printf("Invalid Json: >%s<", res)
-        return status.Errorf(codes.Unknown, "Invalid Json")
-    }
-    statusCode := gjson.Get(res, "status-code").Int()
-    if statusCode < 200 || statusCode >= 300 {
+func badStatusCode(res snapdAPIResponse) error {
+    if res.StatusCode < 200 || res.StatusCode >= 300 {
         return status.Errorf(codes.Unknown, "API response %s gave code %d.", res, statusCode)
     }
     return nil
@@ -89,11 +84,22 @@ func getSnapPathIdMaps(client HttpClient) (map[string][]string, error) {
     if err != nil {
         return nil, err
     }
-    err = validateApiResponse(o)
-    if err != nil {
+    var res snapdAPIResponse 
+    if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
+    if err = badStatusCode(res); err != nil {
+        return nil, err 
+    }
     pathSnaps := make(map[string][]string)
+    for idx, v := range(res.Result) {
+        v.Interface == "home" {
+            path := v.Constraints.PathPattern
+            pathSnaps[path] = append(pathSnaps[path], v.Snap)
+            snapPathId[v.Snap + sep + path] = v.Id
+        }
+    }
+    /*
     snapAr := gjson.Get(o, "result.#(interface=\"home\")#.snap").Array()
     pathAr := gjson.Get(o, "result.#(interface=\"home\")#.constraints.path-pattern").Array()
     idAr := gjson.Get(o, "result.#(interface=\"home\")#.id").Array()
@@ -104,6 +110,7 @@ func getSnapPathIdMaps(client HttpClient) (map[string][]string, error) {
         pathSnaps[path] = append(pathSnaps[path], snap)
         snapPathId[snap + sep + path] = id
     }
+    */
     return pathSnaps, nil
 }
 
@@ -165,17 +172,15 @@ func (s *PermissionServer) AreCustomRulesApplied(ctx context.Context, _ *epb.Emp
     if err != nil {
         return nil, err
     }
-    //err = validateApiResponse(o)
-    //if err != nil {
-    //    return nil, err
-    //}
     var res snapdAPIResponse 
-    if err = json.Unmarshal([]byte(o), &res); err != nil {
+    if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
+    if err = badStatusCode(res); err != nil {
+        return nil, err 
+    }
     fmt.Println(res.Result)
-    return wpb.Bool(true), nil
-    //return wpb.Bool(gjson.Get(o, "result.#").Uint() > 0), nil
+    return wpb.Bool(len(res.Result) > 0), nil
 }
 
 /* Remove access to the path for a given application */
@@ -200,7 +205,14 @@ func (s *PermissionServer) RemoveAppPermission(ctx context.Context, req *pb.Remo
     if err != nil {
         return empty, err
     }
-    return empty, validateApiResponse(o)
+    var res snapdAPIResponse 
+    if err = json.Unmarshal(o, &res); err != nil {
+        return nil, err
+    }
+    if err = badStatusCode(res); err != nil {
+        return nil, err 
+    }
+    return empty, nil
 }
 
 /* List all permissions to personal directories */
