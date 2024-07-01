@@ -84,12 +84,12 @@ func getSnapPathIdMaps(client HttpClient) (map[string][]string, error) {
     if err != nil {
         return nil, err
     }
-    var res snapdAPIResponse 
+    var res snapdAPIResponse
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
     if err = badStatusCode(res.StatusCode); err != nil {
-        return nil, err 
+        return nil, err
     }
     pathSnaps := make(map[string][]string)
     for _, v := range(res.Result) {
@@ -119,12 +119,12 @@ func enableAppPermissions(client HttpClient, enable bool) error {
     if err != nil {
         return err
     }
-    var res confAPIResponse 
+    var res confAPIResponse
     if err = json.Unmarshal(o, &res); err != nil {
         return err
     }
     if err = badStatusCode(res.StatusCode); err != nil {
-        return err 
+        return err
     }
     return nil
 }
@@ -135,7 +135,7 @@ func (s *PermissionServer) IsAppPermissionsEnabled(ctx context.Context, _ *epb.E
     if err != nil {
         return nil, err
     }
-    var res confAPIResponse 
+    var res confAPIResponse
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
@@ -170,12 +170,12 @@ func (s *PermissionServer) AreCustomRulesApplied(ctx context.Context, _ *epb.Emp
     if err != nil {
         return nil, err
     }
-    var res snapdAPIResponse 
+    var res snapdAPIResponse
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
     if err = badStatusCode(res.StatusCode); err != nil {
-        return nil, err 
+        return nil, err
     }
     fmt.Println(res.Result)
     return wpb.Bool(len(res.Result) > 0), nil
@@ -203,12 +203,12 @@ func (s *PermissionServer) RemoveAppPermission(ctx context.Context, req *pb.Remo
     if err != nil {
         return empty, err
     }
-    var res snapdAPIResponse 
+    var res snapdAPIResponse
     if err = json.Unmarshal(o, &res); err != nil {
         return nil, err
     }
     if err = badStatusCode(res.StatusCode); err != nil {
-        return nil, err 
+        return nil, err
     }
     return empty, nil
 }
