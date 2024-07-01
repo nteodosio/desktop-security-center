@@ -4,7 +4,6 @@ import (
     epb "google.golang.org/protobuf/types/known/emptypb"
     wpb "google.golang.org/protobuf/types/known/wrapperspb"
     "context"
-    "github.com/tidwall/gjson"
     "io"
     "bytes"
     "log"
@@ -43,11 +42,12 @@ func NewPermissionServer(c HttpClient) (*PermissionServer) {
     return s
 }
 
-func makeRestReq(client HttpClient, kind string, headers map[string]string, where string, reqBody io.Reader) (string, error) {
+func makeRestReq(client HttpClient, kind string, headers map[string]string, where string, reqBody io.Reader) ([]byte, error) {
+    var resBody []byte
     req, err := http.NewRequest(kind, where, reqBody)
     if err != nil {
         log.Printf("Couldn't create %s request to %s.", kind, where)
-        return "", err
+        return resBody, err
     }
     for k, val := range headers {
         req.Header.Add(k, val)
@@ -55,20 +55,20 @@ func makeRestReq(client HttpClient, kind string, headers map[string]string, wher
     res, err := client.Do(req)
     if err != nil {
         log.Printf("Couldn't send %s request to %s.", kind, where)
-        return "", err
+        return resBody, err
     }
     defer res.Body.Close()
-    resBody, err := io.ReadAll(res.Body)
+    resBody, err = io.ReadAll(res.Body)
     if err != nil {
         log.Printf("Couldn't read response from %s request to %s.", kind, where)
-        return "", err
+        return resBody, err
     }
     return resBody, nil
 }
 
 func badStatusCode(res snapdAPIResponse) error {
     if res.StatusCode < 200 || res.StatusCode >= 300 {
-        return status.Errorf(codes.Unknown, "API response %s gave code %d.", res, statusCode)
+        return status.Errorf(codes.Unknown, "API response %s gave code %d.", res, res.StatusCode)
     }
     return nil
 }
@@ -92,8 +92,8 @@ func getSnapPathIdMaps(client HttpClient) (map[string][]string, error) {
         return nil, err 
     }
     pathSnaps := make(map[string][]string)
-    for idx, v := range(res.Result) {
-        v.Interface == "home" {
+    for _, v := range(res.Result) {
+        if v.Interface == "home" {
             path := v.Constraints.PathPattern
             pathSnaps[path] = append(pathSnaps[path], v.Snap)
             snapPathId[v.Snap + sep + path] = v.Id
@@ -131,7 +131,8 @@ func enableAppPermissions(client HttpClient, enable bool) error {
     if err != nil {
         return err
     }
-    return validateApiResponse(o)
+    //return validateApiResponse(o)
+    fmt.Println(o);return nil
 }
 
 /* This returns 'snap get system experimental.apparmor-prompting' */
@@ -140,12 +141,13 @@ func (s *PermissionServer) IsAppPermissionsEnabled(ctx context.Context, _ *epb.E
     if err != nil {
         return nil, err
     }
-    err = validateApiResponse(o)
-    if err != nil {
-        return nil, err
-    }
-    enabled := gjson.Get(o, "result.experimental.apparmor-prompting").Bool()
-    return wpb.Bool(enabled), nil
+    //err = validateApiResponse(o)
+    //if err != nil {
+    //    return nil, err
+    //}
+    //enabled := gjson.Get(o, "result.experimental.apparmor-prompting").Bool()
+    //return wpb.Bool(enabled), nil
+    fmt.Println(o); return wpb.Bool(true), nil
 }
 
 /* This does the equivalent of
