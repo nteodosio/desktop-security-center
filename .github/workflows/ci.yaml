@@ -21,10 +21,10 @@ jobs:
           sudo apt update
           sudo apt install -y protobuf-compiler golang-google-protobuf-dev \
             protoc-gen-go protoc-gen-go-grpc
-          cd packages
           go generate
           go build -C backend
-          go test
+      - name: Test go
+        run: go test ./...
 
   analyze:
     runs-on: ubuntu-22.04
